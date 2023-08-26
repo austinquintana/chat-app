@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ImageBackground, StyleSheet, Text, View, TextInput, TouchableOpacity } from "react-native";
+import { ImageBackground, StyleSheet, Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView } from "react-native";
 
 const image = require('../media/background-image.png');
 
@@ -72,7 +72,7 @@ const Start = ({navigation}) => {
                         <Text>Start chatting</Text>
                     </TouchableOpacity>
                 </View>
-                {Platform.OS === "ios" ? (
+                {Platform.OS === "android" ? (
                     <KeyboardAvoidingView behavior='padding' />
                 ) : null}
             </ImageBackground>
