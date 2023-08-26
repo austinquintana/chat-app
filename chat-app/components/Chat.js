@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
-import { StyleSheet, View, Platform, KeyboardAvoidingView } from 'react-native';
+import { StyleSheet, Text, View, KeyboardAvoidingView, Platform } from "react-native";
 import { Bubble, GiftedChat } from "react-native-gifted-chat";
 
 const Chat = ({ route, navigation }) => {
+  const { name, color } = route.params;
+
   const [messages, setMessages] = useState([]);
-  const { name } = route.params;
+
+  const onSend = (newMessages) => {
+    setMessages(previousMessages => 
+        GiftedChat.append(previousMessages, newMessages))
+    }
 
   useEffect(() => {
     navigation.setOptions({ title: name })
@@ -29,10 +35,6 @@ const Chat = ({ route, navigation }) => {
 
   }, []);
 
-  const onSend = (newMessages) => {
-    setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages))
-  }
-
   const renderBubble = (props) => {
     return <Bubble
       {...props}
@@ -48,7 +50,7 @@ const Chat = ({ route, navigation }) => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {backgroundColor: color}]}>
       <GiftedChat
         messages={messages}
         renderBubble={renderBubble}
