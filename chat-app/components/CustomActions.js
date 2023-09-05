@@ -42,6 +42,23 @@ const CustomActions = ({
       }
     );
   };
+
+  const convertFileToBlob = async (uri) => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function () {
+        resolve(xhr.response);
+      };
+      xhr.onerror = function (error) {
+        reject(new Error("XHR request failed"));
+      };
+      xhr.responseType = "blob";
+
+      xhr.open("GET", uri, true);
+      xhr.send();
+    });
+  };
+
   const pickImage = async () => {
     let permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -51,8 +68,7 @@ const CustomActions = ({
       if (!permission.cancelled) {
         const imageURI = result.assets[0].uri;
         const uniqueRefString = generateReference(imageURI);
-        const response = await fetch(imageURI);
-        const blob = await response.blob();
+        const blob = await convertFileToBlob(imageURI)
         const newUploadRef = ref(storage, uniqueRefString);
         uploadBytes(newUploadRef, blob).then(async (snapshot) => {
           console.log("File has been uploaded");
@@ -71,8 +87,7 @@ const CustomActions = ({
       if (!permission.cancelled) {
         const imageURI = result.assets[0].uri;
         const uniqueRefString = generateReference(imageURI);
-        const response = await fetch(imageURI);
-        const blob = await response.blob();
+        const blob = await convertFileToBlob(imageURI)
         const newUploadRef = ref(storage, uniqueRefString);
         uploadBytes(newUploadRef, blob).then(async (snapshot) => {
           console.log("File has been uploaded");
