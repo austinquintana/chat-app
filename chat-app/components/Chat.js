@@ -1,74 +1,70 @@
 import { useState, useEffect } from "react";
-import { StyleSheet, Text, View, KeyboardAvoidingView, Platform } from "react-native";
+import {collection, addDoc, onSnapshot, getDocs, query, orderBy} from "firebase/firestore";
 import { Bubble, GiftedChat } from "react-native-gifted-chat";
+import {StyleSheet, Text, View, KeyboardAvoidingView, Platform, Alert} from "react-native";
 
-const Chat = ({ route, navigation }) => {
-  const { name, color } = route.params;
+const Chat = ({ route, navigation, db }) => {
+  const { name, color, userID } = route.params;
 
   const [messages, setMessages] = useState([]);
 
-  const onSend = (newMessages) => {
-    setMessages(previousMessages => 
-        GiftedChat.append(previousMessages, newMessages))
-    }
+  const addMessage = async (newMessages) => {
+      const newMessageRef = await addDoc(
+        collection(db, "messages"),
+        newMessages[0]
+      );
 
-  useEffect(() => {
-    navigation.setOptions({ title: name })
-    setMessages([
-      {
-        _id: 1,
-        text: 'Hello developer',
-        createdAt: new Date(),
-        user: {
-          _id: 2,
-          name: 'React Native',
-          avatar: 'https://placeimg.com/140/140/any',
-        },
-      },
-      {
-        _id: 2,
-        text: 'This is a system message',
-        createdAt: new Date(),
-        system: true,
-      },
-    ]);
+      if (!newMessageRef.id) {
+        Alert.alert("Unable to add. Please try later");
+      }
+    };
 
-  }, []);
-
-  const renderBubble = (props) => {
-    return <Bubble
-      {...props}
-      wrapperStyle={{
-        right: {
-          backgroundColor: "#000"
-        },
-        left: {
-          backgroundColor: "#FFF"
+    useEffect(() => {
+      const unsubMessages = onSnapshot(
+        query(collection(db, "messages"), orderBy("createdAt", "desc")),
+        (documentsSnapshot) => {
+          let newMessages = [];
+          documentsSnapshot.forEach((doc) => {
+            newMessages.push({
+              id: doc.id,
+              ...doc.data(),
+              createdAt: new Date(doc.data().createdAt.toMillis()),
+            });
+          });
+          setMessages(newMessages);
         }
-      }}
-    />
-  }
-
-  return (
-    <View style={[styles.container, {backgroundColor: color}]}>
-      <GiftedChat
-        messages={messages}
-        renderBubble={renderBubble}
-        onSend={messages => onSend(messages)}
-        user={{
-          _id: 1,
-          name
-        }}
-      />
-      {Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null}
-    </View>
-  )
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1
-  }
-});
+      );
+  
+      return () => {
+        if (unsubMessages) unsubMessages();
+      };
+    }, []);
+  
+    useEffect(() => {
+      navigation.setOptions({ title: name });
+    }, []);
+  
+    return (
+      <View style={[styles.container, { backgroundColor: color }]}>
+        <GiftedChat
+          messages={messages}
+          onSend={(message) => addMessage(message)}
+          user={{
+            _id: userID,
+            name: name,
+          }}
+        />
+        {Platform.OS === "android" ? (
+          <KeyboardAvoidingView behavior="height" />
+        ) : null}
+      </View>
+    );
+  };
+  
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+  });
 
 export default Chat;
